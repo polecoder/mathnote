@@ -4,7 +4,7 @@ export default [
   ...tseslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   {
-    ignores: ["dist/**", "node_modules/**", "*.config.js"],
+    ignores: ["out/**", "node_modules/**", "*.config.js", "electron.config.ts"],
   },
   {
     files: ["**/*.ts"],

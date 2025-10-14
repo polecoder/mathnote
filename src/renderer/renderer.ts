@@ -1,6 +1,11 @@
 import Split from "split.js";
 import { EditorManager } from "./modules/EditorManager";
 import { PreviewManager } from "./modules/PreviewManager";
+import {
+  isModifierPressed,
+  openFileAndLoad,
+  saveCurrentOrSaveAs,
+} from "./utils/fileActions";
 
 const editorPane = document.getElementById("editor");
 const previewPane = document.getElementById("preview");
@@ -50,4 +55,27 @@ window.addEventListener("resize", () => {
 });
 window.addEventListener("load", () => {
   editor.layout();
+});
+
+// keyboard shortcuts: Ctrl+O (open), Ctrl+S (save)
+window.addEventListener("keydown", (event) => {
+  void (async () => {
+    // Ctrl+O: open file
+    if (isModifierPressed(event) && event.key.toLowerCase() === "o") {
+      // eslint-disable-next-line no-console
+      console.log("Opening file...");
+      event.preventDefault();
+      await openFileAndLoad(editorManager, previewManager, editor);
+      return;
+    }
+
+    // Ctrl+S: save file
+    if (isModifierPressed(event) && event.key.toLowerCase() === "s") {
+      // eslint-disable-next-line no-console
+      console.log("Saving file...");
+      event.preventDefault();
+      await saveCurrentOrSaveAs(editorManager, editor);
+      return;
+    }
+  })();
 });
