@@ -1,0 +1,77 @@
+/* barra de separación */
+.gutter {
+  background-color: transparent;
+  transition: background-color 0.2s;
+}
+.gutter:hover {
+  background-color: #1e90ff;
+  cursor: ew-resize;
+}
+
+/* menú */
+.menu-container {
+  position: relative;
+  display: inline-block;
+}
+
+.menu-button {
+  background-color: transparent;
+  color: #ccc;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background-color 0.1s;
+}
+
+.menu-button:hover,
+.menu-button.active {
+  background-color: #3c3c3c;
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #252526;
+  border: 1px solid #454545;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  min-width: 200px;
+  z-index: 1000;
+  padding: 4px 0;
+}
+
+.dropdown-menu.show {
+  display: block;
+}
+
+.dropdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 20px;
+  color: #ccc;
+  cursor: pointer;
+  font-size: 13px;
+  background-color: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  transition: background-color 0.1s;
+}
+
+.dropdown-item:hover {
+  background-color: #094771;
+  color: #fff;
+}
+
+.dropdown-item-label {
+  flex: 1;
+}
+
+.dropdown-item-shortcut {
+  margin-left: 20px;
+  color: #888;
+  font-size: 12px;
+}

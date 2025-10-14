@@ -57,6 +57,48 @@ window.addEventListener("load", () => {
   editor.layout();
 });
 
+// Navigation bar buttons
+const fileMenuBtn = document.getElementById("fileMenuBtn");
+const fileDropdown = document.getElementById("fileDropdown");
+const openFileItem = document.getElementById("openFileItem");
+const saveFileItem = document.getElementById("saveFileItem");
+
+// Toggle dropdown menu
+if (fileMenuBtn && fileDropdown) {
+  fileMenuBtn.addEventListener("click", () => {
+    fileDropdown.classList.toggle("show");
+    fileMenuBtn.classList.toggle("active");
+  });
+
+  // Close dropdown when clicking outside
+  window.addEventListener("click", (event) => {
+    if (
+      !fileMenuBtn.contains(event.target as Node) &&
+      !fileDropdown.contains(event.target as Node)
+    ) {
+      fileDropdown.classList.remove("show");
+      fileMenuBtn.classList.remove("active");
+    }
+  });
+}
+
+// Dropdown menu items
+if (openFileItem) {
+  openFileItem.addEventListener("click", () => {
+    fileDropdown?.classList.remove("show");
+    fileMenuBtn?.classList.remove("active");
+    void openFileAndLoad(editorManager, previewManager, editor);
+  });
+}
+
+if (saveFileItem) {
+  saveFileItem.addEventListener("click", () => {
+    fileDropdown?.classList.remove("show");
+    fileMenuBtn?.classList.remove("active");
+    void saveCurrentOrSaveAs(editorManager, editor);
+  });
+}
+
 // keyboard shortcuts: Ctrl+O (open), Ctrl+S (save)
 window.addEventListener("keydown", (event) => {
   void (async () => {
