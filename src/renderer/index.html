@@ -19,9 +19,46 @@
       background-color: #1e90ff;
       cursor: ew-resize;
     }
+
+    /* Navigation bar buttons */
+    .nav-button {
+      background-color: #3c3c3c;
+      color: #ccc;
+      border: 1px solid #555;
+      padding: 0.4rem 1rem;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 3px;
+      transition: background-color 0.2s, color 0.2s;
+    }
+    .nav-button:hover {
+      background-color: #505050;
+      color: #fff;
+    }
+    .nav-button:active {
+      background-color: #1e90ff;
+    }
   </style>
   <body style="height: 100vh; margin: 0; overflow: hidden">
-    <div style="display: flex; height: 100%">
+    <!-- Navigation bar -->
+    <nav id="navbar" style="
+      background-color: #252526;
+      color: #ccc;
+      padding: 0.5rem 1rem;
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid #3c3c3c;
+    ">
+      <button id="openFileBtn" class="nav-button" title="Open file (Ctrl+O)">
+        Open
+      </button>
+      <button id="saveFileBtn" class="nav-button" title="Save file (Ctrl+S)">
+        Save
+      </button>
+    </nav>
+
+    <!-- Main content area -->
+    <div style="display: flex; height: calc(100% - 41px)">
       <div id="editor" style="height: 100%"></div>
       <div
         id="preview"

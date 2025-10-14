@@ -57,6 +57,22 @@ window.addEventListener("load", () => {
   editor.layout();
 });
 
+// Navigation bar buttons
+const openFileBtn = document.getElementById("openFileBtn");
+const saveFileBtn = document.getElementById("saveFileBtn");
+
+if (openFileBtn) {
+  openFileBtn.addEventListener("click", () => {
+    void openFileAndLoad(editorManager, previewManager, editor);
+  });
+}
+
+if (saveFileBtn) {
+  saveFileBtn.addEventListener("click", () => {
+    void saveCurrentOrSaveAs(editorManager, editor);
+  });
+}
+
 // keyboard shortcuts: Ctrl+O (open), Ctrl+S (save)
 window.addEventListener("keydown", (event) => {
   void (async () => {
