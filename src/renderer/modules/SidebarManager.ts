@@ -102,6 +102,9 @@ export class SidebarManager {
 
         if (isLast) {
           // Es un archivo o directorio final
+          if (!current.children) {
+            current.children = [];
+          }
           current.children.push({
             name: entry.name,
             path: entry.path,
@@ -110,6 +113,9 @@ export class SidebarManager {
           });
         } else {
           // Es una carpeta intermedia
+          if (!current.children) {
+            current.children = [];
+          }
           let existing = current.children.find(
             (child) => child.name === part && child.type === "directory"
           );
