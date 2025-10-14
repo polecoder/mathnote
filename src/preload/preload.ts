@@ -20,4 +20,23 @@ contextBridge.exposeInMainWorld("api", {
       suggestedName
     )) as SaveAsResponse;
   },
+  openFolder: async (): Promise<OpenFolderResponse> => {
+    return (await ipcRenderer.invoke(
+      "dialog:openFolder"
+    )) as OpenFolderResponse;
+  },
+  readFolderContents: async (
+    folderPath: string
+  ): Promise<ReadFolderContentsResponse> => {
+    return (await ipcRenderer.invoke(
+      "folder:readContents",
+      folderPath
+    )) as ReadFolderContentsResponse;
+  },
+  readFile: async (filePath: string): Promise<ReadFileResponse> => {
+    return (await ipcRenderer.invoke(
+      "file:readFile",
+      filePath
+    )) as ReadFileResponse;
+  },
 });

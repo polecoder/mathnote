@@ -75,3 +75,50 @@
   color: #888;
   font-size: 12px;
 }
+
+/* Sidebar */
+#sidebar {
+  color: #ccc;
+  font-size: 13px;
+}
+
+.sidebar-empty {
+  padding: 1rem;
+  color: #888;
+  text-align: center;
+}
+
+.tree-container {
+  padding: 0;
+}
+
+.tree-item {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  cursor: default;
+  user-select: none;
+}
+
+.tree-item:hover {
+  background-color: #2a2d2e;
+}
+
+.tree-icon {
+  margin-right: 4px;
+  font-size: 14px;
+}
+
+.tree-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tree-label-clickable {
+  cursor: pointer;
+}
+
+.tree-label-clickable:hover {
+  text-decoration: underline;
+}

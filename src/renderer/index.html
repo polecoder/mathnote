@@ -28,6 +28,10 @@
             <span class="dropdown-item-label">Open File</span>
             <span class="dropdown-item-shortcut">Ctrl+O</span>
           </button>
+          <button class="dropdown-item" id="openFolderItem">
+            <span class="dropdown-item-label">Open Folder</span>
+            <span class="dropdown-item-shortcut">Ctrl+K Ctrl+O</span>
+          </button>
           <button class="dropdown-item" id="saveFileItem">
             <span class="dropdown-item-label">Save</span>
             <span class="dropdown-item-shortcut">Ctrl+S</span>
@@ -37,7 +41,17 @@
     </nav>
 
     <!-- main -->
-    <main style="display: flex; height: 100%">
+    <main style="display: flex; height: calc(100% - 30px)">
+      <div
+        id="sidebar"
+        style="
+          width: 250px;
+          height: 100%;
+          overflow-y: auto;
+          background-color: #252526;
+          border-right: 1px solid #3c3c3c;
+        "
+      ></div>
       <div id="editor" style="height: 100%"></div>
       <div
         id="preview"

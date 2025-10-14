@@ -1,35 +1,43 @@
 import Split from "split.js";
 import { EditorManager } from "./modules/EditorManager";
 import { PreviewManager } from "./modules/PreviewManager";
+import { SidebarManager } from "./modules/SidebarManager";
 import {
   isModifierPressed,
   openFileAndLoad,
   saveCurrentOrSaveAs,
 } from "./utils/fileActions";
 
+const sidebarPane = document.getElementById("sidebar");
 const editorPane = document.getElementById("editor");
 const previewPane = document.getElementById("preview");
 
-if (!editorPane) {
+if (!sidebarPane) {
+  throw new Error("Sidebar pane not found in DOM. Aborting.");
+} else if (!editorPane) {
   throw new Error("Editor pane not found in DOM. Aborting.");
 } else if (!previewPane) {
   throw new Error("Preview pane not found in DOM. Aborting.");
 }
 
+const sidebarManager = SidebarManager.getInstance(sidebarPane);
 const editorManager = EditorManager.getInstance(editorPane);
 const editor = editorManager.getEditor();
 const previewManager = PreviewManager.getInstance(previewPane);
+
 // configurar para sincronización de scroll
 editorManager.setPartner(previewManager);
 previewManager.setPartner(editorManager);
+sidebarManager.setPartners(editorManager, previewManager);
+
 editor.setScrollTop(0);
 previewPane.scrollTop = 0;
 
-// configurar split.js
-Split([editorPane, previewPane], {
+// configurar split.js para sidebar + editor + preview
+Split([sidebarPane, editorPane, previewPane], {
   direction: "horizontal",
-  sizes: [50, 50],
-  minSize: 250,
+  sizes: [15, 42.5, 42.5],
+  minSize: [200, 250, 250],
   cursor: "ew-resize",
   dragInterval: 1,
   onDrag: () => {
@@ -61,6 +69,7 @@ window.addEventListener("load", () => {
 const fileMenuBtn = document.getElementById("fileMenuBtn");
 const fileDropdown = document.getElementById("fileDropdown");
 const openFileItem = document.getElementById("openFileItem");
+const openFolderItem = document.getElementById("openFolderItem");
 const saveFileItem = document.getElementById("saveFileItem");
 
 // Toggle dropdown menu
@@ -88,6 +97,14 @@ if (openFileItem) {
     fileDropdown?.classList.remove("show");
     fileMenuBtn?.classList.remove("active");
     void openFileAndLoad(editorManager, previewManager, editor);
+  });
+}
+
+if (openFolderItem) {
+  openFolderItem.addEventListener("click", () => {
+    fileDropdown?.classList.remove("show");
+    fileMenuBtn?.classList.remove("active");
+    void sidebarManager.openFolder();
   });
 }
 
