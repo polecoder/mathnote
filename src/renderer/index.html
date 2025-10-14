@@ -20,23 +20,72 @@
       cursor: ew-resize;
     }
 
-    /* Navigation bar buttons */
-    .nav-button {
-      background-color: #3c3c3c;
-      color: #ccc;
-      border: 1px solid #555;
-      padding: 0.4rem 1rem;
-      cursor: pointer;
-      font-size: 14px;
-      border-radius: 3px;
-      transition: background-color 0.2s, color 0.2s;
+    /* Navigation bar - VSCode style */
+    .menu-container {
+      position: relative;
+      display: inline-block;
     }
-    .nav-button:hover {
-      background-color: #505050;
+    
+    .menu-button {
+      background-color: transparent;
+      color: #ccc;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background-color 0.1s;
+    }
+    
+    .menu-button:hover,
+    .menu-button.active {
+      background-color: #3c3c3c;
+    }
+    
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background-color: #252526;
+      border: 1px solid #454545;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      min-width: 200px;
+      z-index: 1000;
+      padding: 4px 0;
+    }
+    
+    .dropdown-menu.show {
+      display: block;
+    }
+    
+    .dropdown-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 20px;
+      color: #ccc;
+      cursor: pointer;
+      font-size: 13px;
+      background-color: transparent;
+      border: none;
+      width: 100%;
+      text-align: left;
+      transition: background-color 0.1s;
+    }
+    
+    .dropdown-item:hover {
+      background-color: #094771;
       color: #fff;
     }
-    .nav-button:active {
-      background-color: #1e90ff;
+    
+    .dropdown-item-label {
+      flex: 1;
+    }
+    
+    .dropdown-item-shortcut {
+      margin-left: 20px;
+      color: #888;
+      font-size: 12px;
     }
   </style>
   <body style="height: 100vh; margin: 0; overflow: hidden">
@@ -44,17 +93,23 @@
     <nav id="navbar" style="
       background-color: #252526;
       color: #ccc;
-      padding: 0.5rem 1rem;
+      padding: 0;
       display: flex;
-      gap: 0.5rem;
       border-bottom: 1px solid #3c3c3c;
     ">
-      <button id="openFileBtn" class="nav-button" title="Open file (Ctrl+O)">
-        Open
-      </button>
-      <button id="saveFileBtn" class="nav-button" title="Save file (Ctrl+S)">
-        Save
-      </button>
+      <div class="menu-container">
+        <button id="fileMenuBtn" class="menu-button">File</button>
+        <div id="fileDropdown" class="dropdown-menu">
+          <button class="dropdown-item" id="openFileItem">
+            <span class="dropdown-item-label">Open File</span>
+            <span class="dropdown-item-shortcut">Ctrl+O</span>
+          </button>
+          <button class="dropdown-item" id="saveFileItem">
+            <span class="dropdown-item-label">Save</span>
+            <span class="dropdown-item-shortcut">Ctrl+S</span>
+          </button>
+        </div>
+      </div>
     </nav>
 
     <!-- Main content area -->
