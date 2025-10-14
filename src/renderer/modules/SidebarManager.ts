@@ -1,6 +1,21 @@
 import type { EditorManager } from "./EditorManager";
 import type { PreviewManager } from "./PreviewManager";
+import { buildFileTree } from "../utils/treeBuilder";
+import { renderTreeNode } from "../utils/treeRenderer";
+import { loadFileIntoEditor } from "../utils/fileLoader";
 
+/**
+ * Administrador de la barra lateral de exploración de archivos.
+ * Gestiona la visualización del árbol de archivos y la interacción con el sistema de archivos.
+ * Implementa el patrón Singleton para garantizar una única instancia.
+ *
+ * @example
+ * ```typescript
+ * const sidebar = SidebarManager.getInstance(sidebarElement);
+ * sidebar.setPartners(editorManager, previewManager);
+ * await sidebar.openFolder();
+ * ```
+ */
 export class SidebarManager {
   private static instance: SidebarManager | null = null;
   private container: HTMLElement;
@@ -14,6 +29,12 @@ export class SidebarManager {
     this.render();
   }
 
+  /**
+   * Obtiene la instancia única de SidebarManager (patrón Singleton).
+   *
+   * @param container - Elemento HTML contenedor de la barra lateral
+   * @returns Instancia única de SidebarManager
+   */
   public static getInstance(container: HTMLElement): SidebarManager {
     if (!SidebarManager.instance) {
       SidebarManager.instance = new SidebarManager(container);
@@ -21,6 +42,13 @@ export class SidebarManager {
     return SidebarManager.instance;
   }
 
+  /**
+   * Establece las referencias a los administradores del editor y preview.
+   * Estos son necesarios para cargar archivos cuando el usuario hace click en ellos.
+   *
+   * @param editorManager - Instancia del administrador del editor
+   * @param previewManager - Instancia del administrador del preview
+   */
   public setPartners(
     editorManager: EditorManager,
     previewManager: PreviewManager
@@ -30,7 +58,10 @@ export class SidebarManager {
   }
 
   /**
-   * Abre una carpeta y muestra su contenido
+   * Abre un diálogo para seleccionar una carpeta y muestra su contenido.
+   * Escanea recursivamente todos los archivos Markdown e imágenes.
+   *
+   * @returns Promise que se resuelve cuando la carpeta se ha cargado y renderizado
    */
   public async openFolder(): Promise<void> {
     const result = await window.api.openFolder();
@@ -51,186 +82,53 @@ export class SidebarManager {
   }
 
   /**
-   * Renderiza la estructura de archivos en la barra lateral
+   * Renderiza la estructura de archivos en la barra lateral.
+   * Si no hay carpeta abierta, muestra un mensaje vacío.
    */
   private render(): void {
     this.container.innerHTML = "";
 
     if (!this.currentFolderPath || this.fileEntries.length === 0) {
-      const emptyMessage = document.createElement("div");
-      emptyMessage.className = "sidebar-empty";
-      emptyMessage.textContent = "No folder opened";
-      this.container.appendChild(emptyMessage);
+      this.renderEmptyState();
       return;
     }
 
-    // Organizar archivos en una estructura de árbol
-    const tree = this.buildTree(this.fileEntries);
-    const treeElement = this.renderTree(tree);
+    this.renderFileTree();
+  }
+
+  /**
+   * Renderiza el mensaje de estado vacío cuando no hay carpeta abierta.
+   */
+  private renderEmptyState(): void {
+    const emptyMessage = document.createElement("div");
+    emptyMessage.className = "sidebar-empty";
+    emptyMessage.textContent = "No folder opened";
+    this.container.appendChild(emptyMessage);
+  }
+
+  /**
+   * Renderiza el árbol de archivos en la barra lateral.
+   * Construye el árbol desde las entradas planas y lo visualiza.
+   */
+  private renderFileTree(): void {
+    const tree = buildFileTree(this.fileEntries);
+    const treeElement = renderTreeNode(tree, 0, (filePath) => {
+      void this.handleFileClick(filePath);
+    });
     this.container.appendChild(treeElement);
   }
 
   /**
-   * Construye un árbol de archivos desde una lista plana
+   * Maneja el evento de click en un archivo Markdown.
+   * Carga el archivo en el editor y actualiza el preview.
+   *
+   * @param filePath - Ruta absoluta del archivo a abrir
    */
-  private buildTree(entries: FileEntry[]): TreeNode {
-    const root: TreeNode = {
-      name: "",
-      path: "",
-      type: "directory",
-      children: [],
-    };
-
-    // Ordenar entries: directorios primero, luego archivos alfabéticamente
-    const sortedEntries = [...entries].sort((a, b) => {
-      if (a.type === "directory" && b.type !== "directory") {
-        return -1;
-      }
-      if (a.type !== "directory" && b.type === "directory") {
-        return 1;
-      }
-      return a.relativePath.localeCompare(b.relativePath);
-    });
-
-    for (const entry of sortedEntries) {
-      const parts = entry.relativePath.split(/[\\/]/);
-      let current = root;
-
-      for (let i = 0; i < parts.length; i++) {
-        const part = parts[i];
-        const isLast = i === parts.length - 1;
-
-        if (isLast) {
-          // Es un archivo o directorio final
-          if (!current.children) {
-            current.children = [];
-          }
-          current.children.push({
-            name: entry.name,
-            path: entry.path,
-            type: entry.type,
-            children: entry.type === "directory" ? [] : undefined,
-          });
-        } else {
-          // Es una carpeta intermedia
-          if (!current.children) {
-            current.children = [];
-          }
-          let existing = current.children.find(
-            (child) => child.name === part && child.type === "directory"
-          );
-          if (!existing) {
-            existing = {
-              name: part,
-              path: "",
-              type: "directory",
-              children: [],
-            };
-            current.children.push(existing);
-          }
-          current = existing;
-        }
-      }
-    }
-
-    return root;
-  }
-
-  /**
-   * Renderiza un nodo del árbol como HTML
-   */
-  private renderTree(node: TreeNode, level: number = 0): HTMLElement {
-    const container = document.createElement("div");
-    container.className = "tree-container";
-
-    if (node.children) {
-      for (const child of node.children) {
-        const item = document.createElement("div");
-        item.className = "tree-item";
-        item.style.paddingLeft = `${level * 12}px`;
-
-        if (child.type === "directory") {
-          const icon = document.createElement("span");
-          icon.className = "tree-icon";
-          icon.textContent = "📁 ";
-          item.appendChild(icon);
-
-          const label = document.createElement("span");
-          label.className = "tree-label";
-          label.textContent = child.name;
-          item.appendChild(label);
-
-          container.appendChild(item);
-
-          // Renderizar hijos
-          if (child.children && child.children.length > 0) {
-            const subTree = this.renderTree(child, level + 1);
-            container.appendChild(subTree);
-          }
-        } else if (child.type === "markdown") {
-          const icon = document.createElement("span");
-          icon.className = "tree-icon";
-          icon.textContent = "📄 ";
-          item.appendChild(icon);
-
-          const label = document.createElement("span");
-          label.className = "tree-label tree-label-clickable";
-          label.textContent = child.name;
-          item.appendChild(label);
-
-          // Agregar evento de click para abrir el archivo
-          item.addEventListener("click", () => {
-            void this.openFile(child.path);
-          });
-
-          container.appendChild(item);
-        } else if (child.type === "image") {
-          const icon = document.createElement("span");
-          icon.className = "tree-icon";
-          icon.textContent = "🖼️ ";
-          item.appendChild(icon);
-
-          const label = document.createElement("span");
-          label.className = "tree-label";
-          label.textContent = child.name;
-          item.appendChild(label);
-
-          container.appendChild(item);
-        }
-      }
-    }
-
-    return container;
-  }
-
-  /**
-   * Abre un archivo y carga su contenido en el editor
-   */
-  private async openFile(filePath: string): Promise<void> {
+  private async handleFileClick(filePath: string): Promise<void> {
     if (!this.editorManager || !this.previewManager) {
       return;
     }
 
-    const result = await window.api.readFile(filePath);
-    if (!result.ok) {
-      if (result.error === "file_too_large") {
-        alert(
-          "El archivo es demasiado grande (máx 2 MB). Cambia a uno más pequeño."
-        );
-      } else {
-        alert("Error al leer el archivo: " + result.error);
-      }
-      return;
-    }
-
-    this.editorManager.loadFromPath(filePath, result.content);
-    this.previewManager.updatePreview(this.editorManager.getEditor().getValue());
+    await loadFileIntoEditor(filePath, this.editorManager, this.previewManager);
   }
-}
-
-interface TreeNode {
-  name: string;
-  path: string;
-  type: "directory" | "markdown" | "image";
-  children?: TreeNode[];
 }

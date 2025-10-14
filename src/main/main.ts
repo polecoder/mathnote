@@ -1,6 +1,7 @@
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
-import { readFile, readdir, stat, writeFile } from "fs/promises";
+import { readFile, stat, writeFile } from "fs/promises";
 import * as path from "path";
+import { readFolderRecursive } from "./utils/folderReader";
 
 function createWindow(): void {
   const win = new BrowserWindow({
@@ -88,7 +89,11 @@ ipcMain.handle("dialog:saveAs", async (_event, suggestedName: string) => {
 });
 
 /**
- * Handler IPC para abrir una carpeta
+ * Handler IPC para abrir una carpeta.
+ * Abre un diálogo nativo para seleccionar un directorio del sistema.
+ *
+ * @returns Promise con el resultado: {ok: true, path: string} si se seleccionó carpeta,
+ *          {ok: false, error: string} si se canceló o hubo error
  */
 ipcMain.handle("dialog:openFolder", async () => {
   const { canceled, filePaths } = await dialog.showOpenDialog({
@@ -103,63 +108,13 @@ ipcMain.handle("dialog:openFolder", async () => {
 });
 
 /**
- * Lee recursivamente los archivos .md y las imágenes de una carpeta
- */
-async function readFolderRecursive(
-  folderPath: string,
-  basePath: string
-): Promise<FileEntry[]> {
-  const entries: FileEntry[] = [];
-  const imageExtensions = [".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp"];
-  const markdownExtensions = [".md", ".markdown"];
-
-  try {
-    const items = await readdir(folderPath, { withFileTypes: true });
-
-    for (const item of items) {
-      const fullPath = path.join(folderPath, item.name);
-      const relativePath = path.relative(basePath, fullPath);
-
-      if (item.isDirectory()) {
-        // Agregar carpeta
-        entries.push({
-          name: item.name,
-          path: fullPath,
-          relativePath,
-          type: "directory",
-        });
-        // Leer recursivamente
-        const subEntries = await readFolderRecursive(fullPath, basePath);
-        entries.push(...subEntries);
-      } else if (item.isFile()) {
-        const ext = path.extname(item.name).toLowerCase();
-        if (markdownExtensions.includes(ext)) {
-          entries.push({
-            name: item.name,
-            path: fullPath,
-            relativePath,
-            type: "markdown",
-          });
-        } else if (imageExtensions.includes(ext)) {
-          entries.push({
-            name: item.name,
-            path: fullPath,
-            relativePath,
-            type: "image",
-          });
-        }
-      }
-    }
-  } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error("Error reading folder:", err);
-  }
-
-  return entries;
-}
-
-/**
- * Handler IPC para leer el contenido de una carpeta recursivamente
+ * Handler IPC para leer el contenido de una carpeta recursivamente.
+ * Escanea todos los subdirectorios en busca de archivos Markdown e imágenes.
+ *
+ * @param _event - Evento IPC (no utilizado)
+ * @param folderPath - Ruta absoluta de la carpeta a escanear
+ * @returns Promise con el resultado: {ok: true, entries: FileEntry[]} si tuvo éxito,
+ *          {ok: false, error: string} si hubo un error
  */
 ipcMain.handle("folder:readContents", async (_event, folderPath: string) => {
   try {
@@ -171,7 +126,13 @@ ipcMain.handle("folder:readContents", async (_event, folderPath: string) => {
 });
 
 /**
- * Handler IPC para leer el contenido de un archivo
+ * Handler IPC para leer el contenido de un archivo individual.
+ * Verifica el tamaño del archivo antes de leerlo (límite: 2MB).
+ *
+ * @param _event - Evento IPC (no utilizado)
+ * @param filePath - Ruta absoluta del archivo a leer
+ * @returns Promise con el resultado: {ok: true, content: string} si tuvo éxito,
+ *          {ok: false, error: string} si hubo un error o el archivo es muy grande
  */
 ipcMain.handle("file:readFile", async (_event, filePath: string) => {
   try {
@@ -187,14 +148,6 @@ ipcMain.handle("file:readFile", async (_event, filePath: string) => {
     return { ok: false, error: String(err) };
   }
 });
-
-// Tipos para FileEntry
-interface FileEntry {
-  name: string;
-  path: string;
-  relativePath: string;
-  type: "directory" | "markdown" | "image";
-}
 
 void app.whenReady().then(() => {
   createWindow();
