@@ -1,6 +1,7 @@
 import type * as monaco from "monaco-editor";
 import type { EditorManager } from "../modules/EditorManager";
 import type { PreviewManager } from "../modules/PreviewManager";
+import { TabManager, WELCOME_MODEL_URI } from "../modules/TabManager";
 
 /**
  * Devuelve la plataforma del usuario (Windows, Mac, Linux, etc).
@@ -48,7 +49,27 @@ export async function openFileAndLoad(
     return;
   }
 
-  editorManager.loadFromPath(res.path, res.content);
+  // creamos un modelUri para Monaco (usar file URI para archivos reales)
+  const modelUri = res.path
+    ? `file://${res.path}`
+    : `inmemory://model/untitled-${Date.now()}`;
+  const tabManager = TabManager.getInstance();
+  // crear modelo y pestaña
+  editorManager.createModel(modelUri, res.content);
+  const name = res.path
+    ? res.path.split(/[/\\]/).pop() ?? "untitled.md"
+    : "untitled.md";
+  tabManager.openTab(name, modelUri, res.path ?? null);
+  // cerrar welcome si hay más de una pestaña
+  const tabs = tabManager.list();
+  if (tabs.length > 1) {
+    const welcome = tabs.find((t) => t.getModelUri() === WELCOME_MODEL_URI);
+    if (welcome) {
+      tabManager.closeTab(welcome.getId());
+    }
+  }
+  // switch editor to model
+  editorManager.switchToModel(modelUri);
   previewManager.updatePreview(editor.getValue());
 }
 
@@ -62,31 +83,46 @@ export async function saveCurrentOrSaveAs(
   editorManager: EditorManager,
   editor: monaco.editor.IStandaloneCodeEditor
 ): Promise<boolean> {
-  // Caso 1: el archivo ya tiene path (currentFilePath) -> guardar directamente
-  const saveRes = await editorManager.saveToCurrentPath();
-  if (saveRes.ok) {
-    return true;
-  }
-
-  // Caso 2: el archivo no tiene path (currentFilePath=null) -> guardar como
-  if (saveRes.error === "no_path") {
-    const suggested =
-      (editorManager.getCurrentFilePath() || "untitled.md").split("\\").pop() ??
-      "untitled.md";
-    const pick = await window.api.saveAs(suggested);
-    if (!pick.ok) {
-      return false;
-    }
-
-    const writeRes = await window.api.saveFile(pick.path, editor.getValue());
-    if (writeRes.ok) {
-      editorManager.setCurrentFilePath(pick.path);
-      return true;
-    }
-    alert("Error al guardar el archivo: " + (writeRes.error ?? ""));
+  // obtener tab activo
+  const tabManager = TabManager.getInstance();
+  const active = tabManager.getActive();
+  if (!active) {
+    alert("No hay archivo activo para guardar.");
     return false;
   }
 
-  alert("Error al guardar el archivo: " + (saveRes.error ?? ""));
+  // si la pestaña activa tiene un path -> flujo de guardado normal
+  const activePath = active.getPath();
+  if (activePath) {
+    const res = await editorManager.saveModelToPath(
+      active.getModelUri(),
+      activePath
+    );
+    if (res.ok) {
+      tabManager.setDirty(active.getId(), false);
+      return true;
+    }
+    alert("Error al guardar el archivo: " + (res.error ?? ""));
+    return false;
+  }
+
+  // si la pestaña activa no tiene path -> flujo de "guardar como"
+  const suggested = active.getName() || "untitled.md";
+  const pick = await window.api.saveAs(suggested);
+  if (!pick.ok) return false;
+  const writeRes = await window.api.saveFile(pick.path, editor.getValue());
+  if (writeRes.ok) {
+    // actualizar la pestaña con el nuevo path/nombre
+    active.setPath(pick.path);
+    active.setName(pick.path.split(/[/\\]/).pop() ?? active.getName());
+    tabManager.setDirty(active.getId(), false);
+    tabManager.openTab(
+      active.getName(),
+      active.getModelUri(),
+      active.getPath()
+    );
+    return true;
+  }
+  alert("Error al guardar el archivo: " + (writeRes.error ?? ""));
   return false;
 }

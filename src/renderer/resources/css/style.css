@@ -75,3 +75,63 @@
   color: #888;
   font-size: 12px;
 }
+
+/* tabs */
+.tabs {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  background: #1e1e1e;
+}
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: transparent;
+  color: #ccc;
+  cursor: pointer;
+  box-sizing: border-box;
+  border-bottom: 2px solid transparent;
+}
+.tab.active {
+  background: #2d2d2d;
+  color: #fff;
+  border-bottom-color: #005b96;
+}
+.tab .close {
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 2px;
+}
+.tab .close:hover {
+  color: #fff;
+}
+.tab .name {
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tab.dirty .name::after {
+  content: " *";
+  color: #ffb86b;
+}
+
+.tab .icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.9;
+}
+.tab .close-icon {
+  width: 14px;
+  height: 14px;
+  margin-left: 8px;
+  cursor: pointer;
+  opacity: 0.8;
+}
+.tab .close-icon:hover {
+  opacity: 1;
+}

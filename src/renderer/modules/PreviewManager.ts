@@ -39,6 +39,7 @@ export class PreviewManager {
     return PreviewManager.instance;
   }
 
+  // setters
   public setPartner(partner: EditorManager): void {
     this.partner = partner;
   }
