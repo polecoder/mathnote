@@ -99,14 +99,14 @@
   color: #fff;
   border-bottom-color: #005b96;
 }
-.tab .close {
+.tab .status {
   background: transparent;
   border: none;
   color: #888;
   cursor: pointer;
   padding: 2px;
 }
-.tab .close:hover {
+.tab .status:hover {
   color: #fff;
 }
 .tab .name {
@@ -115,23 +115,25 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.tab.dirty .name::after {
-  content: " *";
-  color: #ffb86b;
-}
 
 .tab .icon {
   width: 16px;
   height: 16px;
   opacity: 0.9;
 }
-.tab .close-icon {
+.tab .status-icon {
   width: 14px;
   height: 14px;
   margin-left: 8px;
   cursor: pointer;
   opacity: 0.8;
 }
-.tab .close-icon:hover {
+.tab .status-icon:hover {
   opacity: 1;
+}
+
+.tab .dirty-icon {
+  width: 8px;
+  height: 8px;
+  padding: 3px;
 }

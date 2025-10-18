@@ -85,7 +85,7 @@ tabManager.onChange((tabs) => {
   if (active) {
     editorManager.switchToModel(active.getModelUri());
   } else {
-    // no tabs left: create a default welcome/untitled tab
+    // no hay pestañas abiertas -> abrir welcome
     editorManager.createModel(welcomeUri, welcomeContent);
     tabManager.openTab("welcome.md", welcomeUri, null);
     editorManager.switchToModel(welcomeUri);
@@ -159,6 +159,31 @@ window.addEventListener(
       await saveCurrentOrSaveAs(editorManager, editor);
       return;
     }
+
+    // Ctrl+W: close active tab
+    if (isModifierPressed(event) && event.key.toLowerCase() === "w") {
+      event.preventDefault();
+      const tabManager = TabManager.getInstance();
+      const active = tabManager.getActive();
+      if (!active) return;
+      tabManager.closeTab(active.getId());
+      return;
+    }
+
+    // Ctrl+Tab: next tab
+    if (isModifierPressed(event) && event.key === "Tab") {
+      event.preventDefault();
+      const tabManager = TabManager.getInstance();
+      const list = tabManager.list();
+      if (list.length <= 1) return;
+      const active = tabManager.getActive();
+      const idx = active
+        ? list.findIndex((t) => t.getId() === active.getId())
+        : -1;
+      const next = list[(idx + 1) % list.length];
+      tabManager.switchTo(next.getId());
+      return;
+    }
   },
-  true // use capture so Monaco doesn't swallow the events
+  true // IMPORTANTE: Monaco usa captura de eventos (true)
 );

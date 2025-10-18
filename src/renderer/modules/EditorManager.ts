@@ -1,5 +1,6 @@
 import * as monaco from "monaco-editor";
 import type { PreviewManager } from "./PreviewManager";
+import { TabManager } from "./TabManager";
 
 export class EditorManager {
   private static instance: EditorManager | null = null;
@@ -35,6 +36,20 @@ export class EditorManager {
 
       this.partner.syncScroll(ratio);
       this.isScrollSyncing = false;
+    });
+
+    // marcar pestaña como dirty al cambiar contenido
+    this.editor.onDidChangeModelContent(() => {
+      if (!this.activeModelUri) return;
+      // encontrar tab asociada y marcar como dirty
+      const tabManager = TabManager.getInstance();
+      const tabs = tabManager.list();
+      const tab = tabs.find((t) => t.getModelUri() === this.activeModelUri);
+      if (tab) {
+        // eslint-disable-next-line no-console
+        console.debug("EditorManager: marking tab dirty", tab.getId());
+        tabManager.setDirty(tab.getId(), true);
+      }
     });
   }
 

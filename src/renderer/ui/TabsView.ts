@@ -22,6 +22,13 @@ export function renderTabsView(
   tabManager.onChange((tabs: Tab[], activeId: string | null) => {
     container.innerHTML = "";
     for (const t of tabs) {
+      // eslint-disable-next-line no-console
+      console.debug(
+        "TabsView: rendering tab",
+        t.getId(),
+        "dirty=",
+        t.isTabDirty()
+      );
       const div = document.createElement("div");
       div.className = `tab ${t.getId() === activeId ? "active" : ""} ${
         t.isTabDirty() ? "dirty" : ""
@@ -37,26 +44,38 @@ export function renderTabsView(
       name.className = "name";
       name.textContent = t.getName();
 
-      const close = document.createElement("img");
-      close.className = "close-icon";
-      close.alt = "close";
-      close.src = "./resources/images/cross.svg";
+      const status = document.createElement("img");
+      status.className = "status-icon";
+      status.alt = "close";
+      status.src = "./resources/images/cross.svg";
 
       div.appendChild(icon);
       div.appendChild(name);
-      div.appendChild(close);
+      div.appendChild(status);
 
       div.addEventListener("click", () => {
         tabManager.switchTo(t.getId());
       });
-      // disable close for welcome if it's the only tab (UI hint)
-      if (t.getModelUri() === WELCOME_MODEL_URI && tabs.length === 1) {
-        close.style.opacity = "0.4";
-      } else {
-        close.addEventListener("click", (e: MouseEvent) => {
+      // mostrar indicador de dirty o close según estado
+      if (t.isTabDirty()) {
+        status.src = "./resources/images/circle.svg";
+        status.classList.add("dirty-icon");
+        status.addEventListener("click", async (e: MouseEvent) => {
           e.stopPropagation();
           tabManager.closeTab(t.getId());
         });
+      } else {
+        status.src = "./resources/images/cross.svg";
+        status.classList.remove("dirty-icon");
+        // deshabilitar cierre de welcome si es la única
+        if (t.getModelUri() === WELCOME_MODEL_URI && tabs.length === 1) {
+          status.style.opacity = "0.4";
+        } else {
+          status.addEventListener("click", (e: MouseEvent) => {
+            e.stopPropagation();
+            tabManager.closeTab(t.getId());
+          });
+        }
       }
 
       container.appendChild(div);

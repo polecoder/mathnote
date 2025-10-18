@@ -1,4 +1,5 @@
 import { Tab } from "../models/Tab";
+import { confirmModal } from "../ui/ConfirmModal";
 
 /** URI usada para el modelo "Welcome" */
 export const WELCOME_MODEL_URI = `inmemory://model/welcome`;
@@ -98,13 +99,26 @@ export class TabManager {
   }
 
   /**
-   * Cierra la pestaña con el id dado. Si no existe no hace nada.
+   * Intenta cerrar la pestaña identificada por `id`.
+   * Comportamiento:
+   * - Si la pestaña no existe, no hace nada.
+   * - Si la pestaña está dirty, pide confirmación antes de cerrar.
+   * - No permite cerrar la pestaña "Welcome" si es la única abierta.
    * Si la pestaña cerrada era la activa, activa la última pestaña restante (comportamiento LIFO).
    */
-  public closeTab(id: string): void {
+  public async closeTab(id: string): Promise<void> {
     const idx = this.tabs.findIndex((t) => t.getId() === id);
     if (idx === -1) return;
-    // Prevent closing welcome when it's the only tab
+    // no permitir cerrar pestañas sin guardar
+    if (this.tabs[idx].isTabDirty()) {
+      const confirmed = await confirmModal(
+        "This tab has unsaved changes. Close anyway?"
+      );
+
+      if (!confirmed) return;
+    }
+
+    // no permitir cerrar welcome si es la única pestaña
     if (
       this.tabs[idx].getModelUri() === WELCOME_MODEL_URI &&
       this.tabs.length === 1
