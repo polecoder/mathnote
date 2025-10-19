@@ -65,7 +65,8 @@ export async function openFileAndLoad(
   if (tabs.length > 1) {
     const welcome = tabs.find((t) => t.getModelUri() === WELCOME_MODEL_URI);
     if (welcome) {
-      tabManager.closeTab(welcome.getId());
+      // forzamos el cerrado de la pestaña de welcome
+      void tabManager.closeTab(welcome.getId(), true);
     }
   }
   // switch editor to model

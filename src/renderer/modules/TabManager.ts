@@ -106,17 +106,9 @@ export class TabManager {
    * - No permite cerrar la pestaña "Welcome" si es la única abierta.
    * Si la pestaña cerrada era la activa, activa la última pestaña restante (comportamiento LIFO).
    */
-  public async closeTab(id: string): Promise<void> {
+  public async closeTab(id: string, force: boolean = false): Promise<void> {
     const idx = this.tabs.findIndex((t) => t.getId() === id);
     if (idx === -1) return;
-    // no permitir cerrar pestañas sin guardar
-    if (this.tabs[idx].isTabDirty()) {
-      const confirmed = await confirmModal(
-        "This tab has unsaved changes. Close anyway?"
-      );
-
-      if (!confirmed) return;
-    }
 
     // no permitir cerrar welcome si es la única pestaña
     if (
@@ -125,6 +117,16 @@ export class TabManager {
     ) {
       return;
     }
+
+    // no permitir cerrar pestañas sin guardar (a menos que se fuerce)
+    if (!force && this.tabs[idx].isTabDirty()) {
+      const confirmed = await confirmModal(
+        "This tab has unsaved changes. Close anyway?"
+      );
+
+      if (!confirmed) return;
+    }
+
     this.tabs.splice(idx, 1);
 
     if (this.activeId === id) {
